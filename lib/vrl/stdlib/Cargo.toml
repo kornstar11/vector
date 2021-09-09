@@ -70,6 +70,7 @@ default = [
     "exists",
     "find",
     "flatten",
+    "flat_map",
     "float",
     "floor",
     "format_int",
@@ -135,6 +136,7 @@ default = [
     "push",
     "redact",
     "replace",
+    "reverse",
     "round",
     "sha1",
     "sha2",
@@ -186,6 +188,7 @@ exists = []
 find = []
 find_table_row = []
 flatten = []
+flat_map = []
 float = []
 floor = []
 format_int = []
@@ -251,6 +254,7 @@ parse_xml = ["roxmltree", "lazy_static", "regex"]
 push = []
 redact = ["lazy_static", "regex"]
 replace = []
+reverse = []
 round = []
 sha1 = ["sha-1", "hex"]
 sha2 = ["sha-2", "hex"]
