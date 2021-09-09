@@ -40,6 +40,8 @@ mod ends_with;
 mod exists;
 #[cfg(feature = "find")]
 mod find;
+#[cfg(feature = "flat_map")]
+mod flat_map;
 #[cfg(feature = "flatten")]
 mod flatten;
 #[cfg(feature = "float")]
@@ -180,6 +182,8 @@ mod push;
 mod redact;
 #[cfg(feature = "replace")]
 mod replace;
+#[cfg(feature = "reverse")]
+mod reverse;
 #[cfg(feature = "round")]
 mod round;
 #[cfg(feature = "sha1")]
@@ -281,6 +285,8 @@ pub use ends_with::EndsWith;
 pub use exists::Exists;
 #[cfg(feature = "find")]
 pub use find::Find;
+#[cfg(feature = "flat_map")]
+pub use flat_map::FlatMap;
 #[cfg(feature = "flatten")]
 pub use flatten::Flatten;
 #[cfg(feature = "float")]
@@ -413,6 +419,8 @@ pub use r#match::Match;
 pub use redact::Redact;
 #[cfg(feature = "replace")]
 pub use replace::Replace;
+#[cfg(feature = "reverse")]
+pub use reverse::Reverse;
 #[cfg(feature = "round")]
 pub use round::Round;
 #[cfg(feature = "sha2")]
@@ -644,6 +652,8 @@ pub fn all() -> Vec<Box<dyn vrl::Function>> {
         Box::new(Redact),
         #[cfg(feature = "replace")]
         Box::new(Replace),
+        #[cfg(feature = "reverse")]
+        Box::new(Reverse),
         #[cfg(feature = "round")]
         Box::new(Round),
         #[cfg(feature = "sha1")]
