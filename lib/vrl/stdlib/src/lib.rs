@@ -232,6 +232,8 @@ mod unique;
 mod unnest;
 #[cfg(feature = "upcase")]
 mod upcase;
+#[cfg(feature = "update_array")]
+mod update_array;
 #[cfg(feature = "uuid_v4")]
 mod uuid_v4;
 
@@ -463,6 +465,8 @@ pub use unique::Unique;
 pub use unnest::Unnest;
 #[cfg(feature = "upcase")]
 pub use upcase::Upcase;
+#[cfg(feature = "update_array")]
+pub use update_array::UpdateArray;
 #[cfg(feature = "uuid_v4")]
 pub use uuid_v4::UuidV4;
 
@@ -696,6 +700,8 @@ pub fn all() -> Vec<Box<dyn vrl::Function>> {
         Box::new(Unnest),
         #[cfg(feature = "upcase")]
         Box::new(Upcase),
+        #[cfg(feature = "update_array")]
+        Box::new(UpdateArray),
         #[cfg(feature = "uuid_v4")]
         Box::new(UuidV4),
     ]
