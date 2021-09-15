@@ -516,6 +516,8 @@ pub fn all() -> Vec<Box<dyn vrl::Function>> {
         Box::new(Exists),
         #[cfg(feature = "find")]
         Box::new(Find),
+        #[cfg(feature = "find")]
+        Box::new(FlatMap),
         #[cfg(feature = "flatten")]
         Box::new(Flatten),
         #[cfg(feature = "float")]
