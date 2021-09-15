@@ -163,6 +163,7 @@ default = [
     "unique",
     "unnest",
     "upcase",
+    "update_array",
     "uuid_v4",
 ]
 
@@ -281,6 +282,7 @@ truncate = []
 unique = ["indexmap"]
 unnest = []
 upcase = []
+update_array = []
 uuid_v4 = ["bytes", "uuid"]
 
 [lib]
