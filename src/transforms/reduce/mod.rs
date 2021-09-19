@@ -266,6 +266,11 @@ impl Reduce {
             for (_, state) in self.reduce_merge_states.drain() {
                 output.push(state.flush().into());
             }
+            output.push(
+                ReduceState::new(event, &self.merge_strategies)
+                    .flush()
+                    .into(),
+            );
         } else {
             self.push_or_new_reduce_state(event, discriminant)
         }
