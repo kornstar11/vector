@@ -35,6 +35,7 @@ pub struct AmqpSourceConfig {
     pub(crate) routing_key: Option<String>,
     pub(crate) exchange_key: Option<String>,
     pub(crate) offset_key: Option<String>,
+    #[serde(flatten)]
     pub(crate) connection: AmqpConfig,
 }
 

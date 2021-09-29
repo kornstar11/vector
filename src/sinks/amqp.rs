@@ -1,7 +1,7 @@
 use crate::{
     amqp::AmqpConfig,
     buffers::Acker,
-    config::{log_schema, DataType, GenerateConfig, SinkConfig, SinkContext, SinkDescription},
+    config::{log_schema, DataType, SinkConfig, SinkContext, SinkDescription},
     event::Event,
     internal_events::{
         sink::{AmqpAcknowledgementFailed, AmqpDeliveryFailed, AmqpNoAcknowledgement},
@@ -39,6 +39,7 @@ pub struct AmqpSinkConfig {
     pub(crate) exchange: String,
     pub(crate) routing_key: Option<String>,
     pub(crate) encoding: EncodingConfig<Encoding>,
+    #[serde(flatten)]
     pub(crate) connection: AmqpConfig,
 }
 
@@ -47,7 +48,7 @@ impl Default for AmqpSinkConfig {
         Self {
             exchange: "vector".to_string(),
             routing_key: None,
-            encoding: Encoding::Text.into(),
+            encoding: Encoding::Json.into(),
             connection: AmqpConfig::default(),
         }
     }
@@ -78,17 +79,7 @@ inventory::submit! {
     SinkDescription::new::<AmqpSinkConfig>("amqp")
 }
 
-impl GenerateConfig for AmqpSinkConfig {
-    fn generate_config() -> toml::Value {
-        toml::from_str(
-            r#"connection_string = "amqp://localhost:5672/%2f"
-            routing_key = "user_id"
-            exchange = "test"
-            encoding.codec = "protobuf""#,
-        )
-        .unwrap()
-    }
-}
+impl_generate_config_from_default!(AmqpSinkConfig);
 
 #[async_trait::async_trait]
 #[typetag::serde(name = "amqp")]
