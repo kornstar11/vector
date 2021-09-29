@@ -48,7 +48,7 @@ impl Default for AmqpSinkConfig {
         Self {
             exchange: "vector".to_string(),
             routing_key: None,
-            encoding: Encoding::Json.into(),
+            encoding: Encoding::Text.into(),
             connection: AmqpConfig::default(),
         }
     }
