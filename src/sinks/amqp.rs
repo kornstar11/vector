@@ -148,7 +148,7 @@ impl Sink<Event> for AmqpSink {
         let exchange = match self.exchange.render_string(&item) {
             Ok(e) => e,
             Err(missing_keys) => {
-                emit!(TemplateRenderingFailed {
+                emit!(&TemplateRenderingFailed {
                     error: missing_keys,
                     field: Some("exchange"),
                     drop_event: true,
@@ -161,7 +161,7 @@ impl Sink<Event> for AmqpSink {
             match t.render_string(&item) {
                 Ok(k) => k,
                 Err(error) => {
-                    emit!(TemplateRenderingFailed {
+                    emit!(&TemplateRenderingFailed {
                         error,
                         field: Some("routing_key"),
                         drop_event: true,
@@ -198,7 +198,7 @@ impl Sink<Event> for AmqpSink {
                         this.in_flight = Some(InFlight::Committing(Box::pin(result)));
                     }
                     Err(err) => {
-                        emit!(AmqpDeliveryFailed { error: err });
+                        emit!(&AmqpDeliveryFailed { error: err });
                         return Poll::Ready(Err(()));
                     }
                 },
@@ -207,12 +207,12 @@ impl Sink<Event> for AmqpSink {
                     this.in_flight.take();
                     match r {
                         Err(e) => {
-                            emit!(AmqpAcknowledgementFailed { error: e });
+                            emit!(&AmqpAcknowledgementFailed { error: e });
                             return Poll::Ready(Err(()));
                         }
                         Ok(confirm) => {
                             if let lapin::publisher_confirm::Confirmation::Nack(_) = confirm {
-                                emit!(AmqpNoAcknowledgement::default());
+                                emit!(&AmqpNoAcknowledgement::default());
                                 return Poll::Ready(Err(()));
                             } else {
                                 this.acker.ack(1);

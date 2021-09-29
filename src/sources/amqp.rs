@@ -113,7 +113,7 @@ async fn run_amqp_source(
         )
         .await
         .map_err(|error| {
-            emit!(AmqpConsumerFailed { error });
+            emit!(&AmqpConsumerFailed { error });
             ()
         })?
         .fuse();
@@ -126,11 +126,11 @@ async fn run_amqp_source(
         if let ShutdownOrMessage::Message(Some(try_m)) = msg {
             match try_m {
                 Err(error) => {
-                    emit!(AmqpEventFailed { error });
+                    emit!(&AmqpEventFailed { error });
                     return Err(());
                 }
                 Ok((_, msg)) => {
-                    emit!(AmqpEventReceived {
+                    emit!(&AmqpEventReceived {
                         byte_size: msg.data.len()
                     });
 
@@ -170,10 +170,10 @@ async fn run_amqp_source(
                     }
 
                     if let Err(error) = out.send(event).await {
-                        emit!(AmqpDeliveryFailed { error });
+                        emit!(&AmqpDeliveryFailed { error });
                     }
                     if let Err(error) = msg.acker.ack(ack_options).await {
-                        emit!(AmqpCommitFailed { error });
+                        emit!(&AmqpCommitFailed { error });
                     }
                 }
             }
