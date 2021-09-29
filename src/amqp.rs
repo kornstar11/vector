@@ -16,14 +16,14 @@ pub(crate) enum ClientCertDer {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct AmqpConfig {
     /// Format: amqp://user:password@host:port/vhost?timeout=seconds
-    pub(crate) connection_string: String,
+    pub(crate) url: String,
     pub(crate) tls: Option<crate::tls::TlsConfig>,
 }
 
 impl Default for AmqpConfig {
     fn default() -> Self {
         Self {
-            connection_string: "amqp://127.0.0.1/%2f".to_string(),
+            url: "amqp://127.0.0.1/%2f".to_string(),
             tls: None,
         }
     }
@@ -33,8 +33,8 @@ impl AmqpConfig {
     pub async fn connect(
         &self,
     ) -> Result<(lapin::Connection, lapin::Channel), Box<dyn std::error::Error + Send + Sync>> {
-        info!("Connecting to {}", self.connection_string);
-        let addr = self.connection_string.clone();
+        info!("Connecting to {}", self.url);
+        let addr = self.url.clone();
         let conn = match &self.tls {
             Some(tls) => {
                 let cert_chain = if let Some(ca) = &tls.options.ca_file {

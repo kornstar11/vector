@@ -52,16 +52,7 @@ components: sinks: amqp: {
 	support: components._amqp.support
 
 	configuration: {
-		connection: {
-			common:      true
-			description: "Connection options for Amqp sink"
-			required:    true
-			warnings: []
-			type: object: {
-				connection_string: components._amqp.configuration.connection_string
-				tls: components._amqp.configuration.tls
-			}
-		}
+		url: components._amqp.configuration.url
 		exchange: {
 			description: "The exchange to publish messages to"
 			required:    true

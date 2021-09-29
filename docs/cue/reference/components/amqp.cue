@@ -17,11 +17,11 @@ components: _amqp: {
 			}
 		}
 		tls: {
-            enabled:                true
-            can_enable:             true
-            can_verify_certificate: true
-            enabled_default:        false
-        }
+			enabled:                true
+			can_enable:             true
+			can_verify_certificate: true
+			enabled_default:        false
+		}
 	}
 
 	support: {
@@ -41,7 +41,7 @@ components: _amqp: {
 	}
 
 	configuration: {
-		connection_string: {
+		url: {
 			description: "Connection string to use when connecting to an amqp server in the format of amqp://user:password@host:port/vhost?timeout=seconds"
 			required:    true
 			warnings: []

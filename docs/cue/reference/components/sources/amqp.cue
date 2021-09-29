@@ -4,21 +4,21 @@ components: sources: amqp: {
 	title: "Amqp"
 
 	features: {
-	    collect: from: {
-            service: services.amqp
-            interface: {
-                socket: {
-                    api: {
-                        title: "Amqp protocol"
-                        url:   urls.amqp_protocol
-                    }
-                    direction: "incoming"
-                    port:      5672
-                    protocols: ["tcp"]
-                    ssl: "optional"
-                }
-            }
-        }
+		collect: from: {
+			service: services.amqp
+			interface: {
+				socket: {
+					api: {
+						title: "Amqp protocol"
+						url:   urls.amqp_protocol
+					}
+					direction: "incoming"
+					port:      5672
+					protocols: ["tcp"]
+					ssl: "optional"
+				}
+			}
+		}
 	}
 
 	classes: {
@@ -37,29 +37,16 @@ components: sources: amqp: {
 	}
 
 	configuration: {
-	    connection: {
-            common: true
-            description: "Connection options for Amqp source"
-            required: true
-            warnings: []
-            type: object: {
-                user: components._amqp.configuration.user
-                password: components._amqp.configuration.password
-                host: components._amqp.configuration.host
-                port: components._amqp.configuration.port
-                connection_timeout: components._amqp.configuration.connection_timeout
-                vhost: components._amqp.configuration.vhost
-            }
-        }
-        group_id: {
-            description: "The consumer group name to be used to consume events from Amqp.\n"
-            required:    true
-            warnings: []
-            type: string: {
-                examples: ["consumer-group-name"]
-                syntax: "literal"
-            }
-        }
+		url: components._amqp.configuration.url
+		consumer: {
+			description: "The consumer group name to be used to consume events from Amqp.\n"
+			required:    true
+			warnings: []
+			type: string: {
+				examples: ["consumer-group-name"]
+				syntax: "literal"
+			}
+		}
 		routing_key: {
 			common:      true
 			description: "The log field name to use for the Amqp routing key."
@@ -72,27 +59,27 @@ components: sources: amqp: {
 			}
 		}
 		exchange_key: {
-            common:      true
-            description: "The log field name to use for the Amqp exchange key."
-            required:    false
-            warnings: []
-            type: string: {
-                default: "message_key"
-                examples: ["message_key"]
-                syntax: "literal"
-            }
-        }
+			common:      true
+			description: "The log field name to use for the Amqp exchange key."
+			required:    false
+			warnings: []
+			type: string: {
+				default: "message_key"
+				examples: ["message_key"]
+				syntax: "literal"
+			}
+		}
 		offset_key: {
-            common:      true
-            description: "The log field name to use for the Amqp offset key."
-            required:    false
-            warnings: []
-            type: string: {
-                default: "message_key"
-                examples: ["message_key"]
-                syntax: "literal"
-            }
-        }
+			common:      true
+			description: "The log field name to use for the Amqp offset key."
+			required:    false
+			warnings: []
+			type: string: {
+				default: "message_key"
+				examples: ["message_key"]
+				syntax: "literal"
+			}
+		}
 	}
 
 	output: logs: record: {
