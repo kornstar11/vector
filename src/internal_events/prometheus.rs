@@ -1,4 +1,5 @@
-use super::InternalEvent;
+// ## skip check-events ##
+
 use hyper::StatusCode;
 use metrics::{counter, histogram};
 #[cfg(feature = "sources-prometheus")]
@@ -6,6 +7,7 @@ use prometheus_parser::ParserError;
 #[cfg(feature = "sources-prometheus")]
 use std::borrow::Cow;
 use std::time::Instant;
+use vector_core::internal_event::InternalEvent;
 
 #[derive(Debug)]
 pub struct PrometheusEventReceived {

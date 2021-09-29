@@ -99,6 +99,7 @@ criterion_group!(
               starts_with,
               strip_ansi_escape_codes,
               strip_whitespace,
+              tally,
               to_bool,
               to_float,
               to_int,
@@ -466,7 +467,7 @@ bench_function! {
 
     valid {
         args: func_args![value: "1.2.3.4"],
-        want: Ok(value!(67305985)),
+        want: Ok(value!(16909060)),
     }
 }
 
@@ -488,7 +489,7 @@ bench_function! {
     ip_ntoa => vrl_stdlib::IpNtoa;
 
     valid {
-        args: func_args![value: 67305985],
+        args: func_args![value: 16909060],
         want: Ok(value!("1.2.3.4")),
     }
 }
@@ -1903,6 +1904,18 @@ bench_function! {
         args: func_args![value: Value::Null],
         want: Ok(Value::Null),
     }
+}
+
+bench_function! {
+    tally => vrl_stdlib::Tally;
+
+    default {
+        args: func_args![
+            value: value!(["bar", "foo", "baz", "foo"]),
+        ],
+        want: Ok(value!({"bar": 1, "foo": 2, "baz": 1})),
+    }
+
 }
 
 bench_function! {

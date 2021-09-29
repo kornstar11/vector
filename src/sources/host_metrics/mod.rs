@@ -148,12 +148,16 @@ pub struct HostMetrics {
 }
 
 impl HostMetrics {
+    #[cfg(not(target_os = "linux"))]
+    pub const fn new(config: HostMetricsConfig) -> Self {
+        Self { config }
+    }
+
+    #[cfg(target_os = "linux")]
     pub fn new(config: HostMetricsConfig) -> Self {
-        #[cfg(target_os = "linux")]
         let root_cgroup = cgroups::CGroup::root(config.cgroups.base.as_deref());
         Self {
             config,
-            #[cfg(target_os = "linux")]
             root_cgroup,
         }
     }
@@ -192,7 +196,7 @@ impl HostMetrics {
                 metric.insert_tag("host".into(), hostname.into());
             }
         }
-        emit!(HostMetricsEventReceived {
+        emit!(&HostMetricsEventReceived {
             count: metrics.len()
         });
         metrics.into_iter().map(Into::into)
