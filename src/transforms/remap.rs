@@ -9,6 +9,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use shared::TimeZone;
 use snafu::{ResultExt, Snafu};
+use vector_core::event::{LogEvent, Value};
 use std::fs::File;
 use std::io::{self, Read};
 use std::path::PathBuf;
@@ -60,6 +61,7 @@ pub struct Remap {
     timezone: TimeZone,
     drop_on_error: bool,
     drop_on_abort: bool,
+    state: Option<Value>,
 }
 
 impl Remap {
@@ -97,12 +99,16 @@ impl Remap {
             timezone: config.timezone,
             drop_on_error: config.drop_on_error,
             drop_on_abort: config.drop_on_abort,
+            state: Default::default()
         })
     }
 }
 
+const STATE_KEY: &'static str = "_state_";
+
 impl FunctionTransform for Remap {
     fn transform(&mut self, output: &mut Vec<Event>, event: Event) {
+        let stateful = true;
         // If a program can fail or abort at runtime, we need to clone the
         // original event and keep it around, to allow us to discard any
         // mutations made to the event while the VRL program runs, before it
@@ -119,8 +125,20 @@ impl FunctionTransform for Remap {
         } else {
             None
         };
-
-        let mut target: VrlTarget = event.into();
+        /// If stateful is enabled, we shoehorn in the state to make the event look like
+        /// {event: ..., state: ...}
+        let (mut target, is_stateful) = if let Some(stateful) = self.state.take() {
+            if let Event::Log(event) = event {
+                let state = std::mem::take(&mut self.state);
+                event.insert(STATE_KEY.to_string(), state);
+                let event = Event::Log(event);
+                (event.into(), true)
+            } else {
+                (event.into(), false)
+            }
+        } else {
+            (event.into(), false)
+        };
 
         let mut runtime = Runtime::default();
 
@@ -129,6 +147,10 @@ impl FunctionTransform for Remap {
         match result {
             Ok(_) => {
                 for event in target.into_events() {
+                    let event: Event = if is_stateful { //need to pull the 'state' value back out
+                        let mut log_event: LogEvent = event.into_log();
+                        self.state = log_event.remove(STATE_KEY);
+                    }
                     output.push(event)
                 }
             }
