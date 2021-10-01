@@ -1,6 +1,6 @@
 use crate::{
     config::{DataType, TransformConfig, TransformContext, TransformDescription},
-    event::{Event, VrlTarget},
+    event::{Event},
     internal_events::{RemapMappingAbort, RemapMappingError},
     transforms::{FunctionTransform, Transform},
     Result,
@@ -9,11 +9,11 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use shared::TimeZone;
 use snafu::{ResultExt, Snafu};
-use vector_core::event::{LogEvent, Value};
+use vector_core::event::{Value, VrlTarget};
 use std::fs::File;
 use std::io::{self, Read};
 use std::path::PathBuf;
-use vrl::diagnostic::Formatter;
+use vrl::{Target, diagnostic::Formatter};
 use vrl::{Program, Runtime, Terminate};
 
 #[derive(Deserialize, Serialize, Debug, Clone, Derivative)]
@@ -125,19 +125,19 @@ impl FunctionTransform for Remap {
         } else {
             None
         };
-        /// If stateful is enabled, we shoehorn in the state to make the event look like
-        /// {event: ..., state: ...}
-        let (mut target, is_stateful) = if let Some(stateful) = self.state.take() {
-            if let Event::Log(event) = event {
-                let state = std::mem::take(&mut self.state);
+        // If stateful is enabled, we shoehorn in the state to make the event look like
+        // {"_state_": ..., the event}
+        let (mut target, is_stateful) = if let Some(state) = self.state.take() {
+            if let Event::Log(mut event) = event {
                 event.insert(STATE_KEY.to_string(), state);
                 let event = Event::Log(event);
-                (event.into(), true)
+                (VrlTarget::new(event), true)
             } else {
-                (event.into(), false)
+                self.state = Some(state);
+                (VrlTarget::new(event), false)
             }
         } else {
-            (event.into(), false)
+            (VrlTarget::new(event), false)
         };
 
         let mut runtime = Runtime::default();
@@ -148,9 +148,15 @@ impl FunctionTransform for Remap {
             Ok(_) => {
                 for event in target.into_events() {
                     let event: Event = if is_stateful { //need to pull the 'state' value back out
-                        let mut log_event: LogEvent = event.into_log();
-                        self.state = log_event.remove(STATE_KEY);
-                    }
+                        if let Event::Log(mut log_event) = event {
+                            self.state = log_event.remove(STATE_KEY);
+                            Event::Log(log_event)
+                        } else {
+                            event
+                        }
+                    } else {
+                        event
+                    };
                     output.push(event)
                 }
             }
@@ -276,6 +282,55 @@ mod tests {
         assert_eq!(get_field_string(&result, "bar"), "baz");
         assert_eq!(get_field_string(&result, "copy"), "buz");
         assert_eq!(result.metadata(), &metadata);
+    }
+
+    #[test]
+    fn check_read_write_state() {
+        let event = {
+            let mut event = LogEvent::from("augment me");
+            event.insert("copy_from", "buz");
+            Event::from(event)
+        };
+        let metadata = event.metadata().clone();
+
+        let conf = RemapConfig {
+            source: Some(
+                r#"  .foo = "bar"
+                .bar = "baz"
+                .copy = .copy_from
+                .old_state = _state_
+                _state_ = {"key1":1,"key2":true}
+              "#.to_string(),
+            ),
+            file: None,
+            timezone: TimeZone::default(),
+            drop_on_error: true,
+            drop_on_abort: false,
+        };
+        let mut tform = Remap::new(conf, &Default::default()).unwrap();
+
+        let result = transform_one(&mut tform, event.clone()).unwrap();
+        assert_eq!(get_field_string(&result, "message"), "augment me");
+        assert_eq!(get_field_string(&result, "copy_from"), "buz");
+        assert_eq!(get_field_string(&result, "foo"), "bar");
+        assert_eq!(get_field_string(&result, "bar"), "baz");
+        assert_eq!(get_field_string(&result, "copy"), "buz");
+        assert_eq!(get_field_string(&result, "copy"), "buz");
+        assert_eq!(event.as_log().get("old_state").clone(), None);
+        assert_eq!(result.metadata(), &metadata);
+
+        let mut expected_state = BTreeMap::new();
+        expected_state.insert("key1".to_string(), Value::Integer(1));
+        expected_state.insert("key2".to_string(), Value::Boolean(true));
+        let result = transform_one(&mut tform, event.clone()).unwrap();
+        assert_eq!(get_field_string(&result, "message"), "augment me");
+        assert_eq!(get_field_string(&result, "copy_from"), "buz");
+        assert_eq!(get_field_string(&result, "foo"), "bar");
+        assert_eq!(get_field_string(&result, "bar"), "baz");
+        assert_eq!(get_field_string(&result, "copy"), "buz");
+        assert_eq!(get_field_string(&result, "copy"), "buz");
+        assert_eq!(event.as_log().get("old_state").clone(), Some(Value::Map(expected_state)));
+        assert_eq!(result.metadata(), &metadata)
     }
 
     #[test]
