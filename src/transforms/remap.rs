@@ -108,7 +108,6 @@ const STATE_KEY: &'static str = "_state_";
 
 impl FunctionTransform for Remap {
     fn transform(&mut self, output: &mut Vec<Event>, event: Event) {
-        let stateful = true;
         // If a program can fail or abort at runtime, we need to clone the
         // original event and keep it around, to allow us to discard any
         // mutations made to the event while the VRL program runs, before it
@@ -298,7 +297,9 @@ mod tests {
                 r#"  .foo = "bar"
                 .bar = "baz"
                 .copy = .copy_from
-                .old_state = _state_
+                if _state_ != null {
+                  .old_state = _state_
+                }
                 _state_ = {"key1":1,"key2":true}
               "#.to_string(),
             ),
@@ -329,7 +330,7 @@ mod tests {
         assert_eq!(get_field_string(&result, "bar"), "baz");
         assert_eq!(get_field_string(&result, "copy"), "buz");
         assert_eq!(get_field_string(&result, "copy"), "buz");
-        assert_eq!(event.as_log().get("old_state").clone(), Some(Value::Map(expected_state)));
+        assert_eq!(event.as_log().get("old_state").unwrap().clone(), Value::Map(expected_state));
         assert_eq!(result.metadata(), &metadata)
     }
 
